@@ -1,6 +1,7 @@
 use chrono::Datelike;
 use chrono::Local;
 use chrono::{TimeZone, Utc};
+use colored::Colorize;
 use std::io;
 use std::io::prelude::*;
 use std::ptr::null;
@@ -22,6 +23,27 @@ impl Object {
         //main "new" get all user data and transfer it to the necessary struct
         let mut sRA: Vec<&str> = RA.split(' ').collect();
         let mut sDEC: Vec<&str> = DEC.split(' ').collect();
+
+        if sDEC.len() < 3 {
+            println!(
+                "{}",
+                "#####\nERROR: DEC only had two values or less\n#####".yellow()
+            );
+            starting();
+        } else if sRA.len() < 3 {
+            println!(
+                "{}",
+                "#####\nERROR: RA only had two values or less\n#####".yellow()
+            );
+            starting();
+        } else if sDEC.len() > 3 {
+            println!("{}", "#####\nERROR: DEC has to many value\n#####".yellow());
+            starting();
+        } else if sRA.len() > 3 {
+            println!("{}", "#####\nERROR: RA has to many value\n#####".yellow());
+            starting();
+        }
+
         Self {
             RA: (sRA[0].parse::<f64>().unwrap()
                 + (sRA[1].parse::<f64>().unwrap() / 60.0)
@@ -39,6 +61,34 @@ impl User {
         let mut time: Vec<&str> = TIME.split(':').collect();
         let mut lat: Vec<&str> = LAT.split(' ').collect();
         let mut long: Vec<&str> = LONG.split(' ').collect();
+
+        if time.len() > 2 || time.len() < 2 {
+            println!("{}", "#####\nERROR: Wrong hour format\n#####".yellow());
+            starting();
+        }
+        if lat.len() > 2 {
+            println!("{}", "#####\nERROR: Lat has to many values\n#####".yellow());
+            starting();
+        } else if lat.len() < 2 {
+            println!(
+                "{}",
+                "#####\nERROR: Lat only had one value or less\n#####".yellow()
+            );
+            starting();
+        }
+        if long.len() > 2 {
+            println!(
+                "{}",
+                "#####\nERROR: Long has to many values\n#####".yellow()
+            );
+            starting();
+        } else if long.len() < 2 {
+            println!(
+                "{}",
+                "#####\nERROR: Long only had one value or less\n#####".yellow()
+            );
+            starting();
+        }
 
         let offset = Local::now().offset().local_minus_utc() as f64 / 3600.0; // add an offset if user is not in utc
 
@@ -105,14 +155,14 @@ fn calculation(object: &Object, user: &User) {
     let alt = altitude(user, object, HA);
     let az = azimute(user, object, alt, HA);
 
-    println!("HA {}", HA);
-    println!("DEC: {}", object.DEC);
-    println!("lat: {}", user.lat);
-    println!("J2000: {}", j2000);
-    println!("lst: {}", lst);
-    println!("alt: {}", alt);
-    println!("az: {}", az);
-    println!("{}", toDegree(alt, az))
+    //println!("HA {}", HA);
+    //println!("DEC: {}", object.DEC);
+    //println!("lat: {}", user.lat);
+    //println!("J2000: {}", j2000);
+    //println!("lst: {}", lst);
+    //println!("alt: {}", alt);
+    //println!("az: {}", az);
+    println!("{}", toDegree(alt, az).blue())
 }
 fn toDegree(alt: f64, az: f64) -> String {
     let alt_d = alt.round();
@@ -123,9 +173,9 @@ fn toDegree(alt: f64, az: f64) -> String {
 
     format!("{}°{}' / {}°{}'", alt_d, alt_m, az_d, az_m)
 }
-fn main() {
+fn starting() {
     println!(
-        "###########################\nEnter RA (h/m/s) with space between each value\nSame goes for DEC\nTime must be write with a : between hours and minutes, do not enter the seconds\nThe longitude and Latitude only take two arguments\nThe longitude is set to East remember to check your settings in Stellarium, etc...\n###########################"
+        "###########################\nEnter RA (h/m/s) with space between each value\nSame goes for DEC\nTime must be write with a ':' between hours and minutes, do not enter the seconds\nThe longitude and Latitude only take two arguments\nThe longitude is set to East remember to check your settings in Stellarium, etc...\n###########################"
     );
     print!("RA: ");
     io::stdout().flush().unwrap();
@@ -158,5 +208,7 @@ fn main() {
     let user = User::new(TIME, LAT, LONG);
     let object = Object::new(RA, DEC);
     calculation(&object, &user);
-    //Object::new(RA, DEC, TIME, LAT, LONG);
+}
+fn main() {
+    starting();
 }
